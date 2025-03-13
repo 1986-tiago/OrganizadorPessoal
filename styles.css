@@ -22,7 +22,7 @@ body {
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Estilos para o calendário */
+/* Estilos para o calendário principal */
 #calendario table {
     width: 100%;
     border-collapse: collapse;
@@ -66,4 +66,38 @@ body {
     background-color: #d1e7dd;
     border-radius: 4px;
     display: inline-block;
+}
+
+/* Estilos para o calendário customizado */
+.custom-calendar-container {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: white;
+    border: 1px solid #dee2e6;
+    z-index: 1000;
+    padding: 5px;
+}
+
+.custom-calendar-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.custom-calendar-table th,
+.custom-calendar-table td {
+    border: 1px solid #dee2e6;
+    padding: 5px;
+    text-align: center;
+    cursor: pointer;
+}
+
+.custom-calendar-table th {
+    background-color: #e9ecef;
+}
+
+.custom-calendar-table td:hover,
+.custom-calendar-table .highlight {
+    background-color: #d1e7dd;
 }

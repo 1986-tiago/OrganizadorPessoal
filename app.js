@@ -33,43 +33,142 @@ function logout() {
     window.location.href = "index.html";
 }
 
-// Armazena metas
-let metas = JSON.parse(localStorage.getItem("metas")) || [];
+/* 
+  Armazena todas as metas em formato de objeto, 
+  separadas por usuário. Exemplo:
+  {
+     "admin": [ ... metas ... ],
+     "user":  [ ... metas ... ]
+  }
+*/
+let allMetas = JSON.parse(localStorage.getItem("metas")) || {};
+let loggedUser = localStorage.getItem("loggedUser");
+
+// Garante que exista um array de metas para o usuário logado
+if (loggedUser && !allMetas[loggedUser]) {
+    allMetas[loggedUser] = [];
+}
+
+// Funções auxiliares para ler e salvar metas do usuário atual
+function getUserMetas() {
+    if (!loggedUser) return [];
+    return allMetas[loggedUser] || [];
+}
+
+function setUserMetas(metas) {
+    if (!loggedUser) return;
+    allMetas[loggedUser] = metas;
+    localStorage.setItem("metas", JSON.stringify(allMetas));
+}
 
 // Variável global para armazenar o índice da meta em edição (para fechamento)
 let currentMetaIndex = null;
 
-// Função para formatar data como YYYY-MM-DD
+// Formata data em YYYY-MM-DD
 function formatDate(date) {
     const year = date.getFullYear();
-    const month = ('0' + (date.getMonth()+1)).slice(-2);
+    const month = ('0' + (date.getMonth() + 1)).slice(-2);
     const day = ('0' + date.getDate()).slice(-2);
     return `${year}-${month}-${day}`;
 }
 
-// Função para calcular limites da semana (domingo a sábado) a partir do input week (ISO, que começa na segunda)
-function computeWeekBoundaries(weekString) {
-    // weekString no formato "YYYY-Www"
-    const [yearStr, weekStr] = weekString.split("-W");
-    const year = parseInt(yearStr);
-    const week = parseInt(weekStr);
-    // Calcula a data da segunda-feira da ISO week
-    let simple = new Date(year, 0, 1 + (week - 1) * 7);
-    const dow = simple.getDay();
-    let monday = new Date(simple);
-    if (dow <= 4) {
-        monday.setDate(simple.getDate() - (dow - 1));
-    } else {
-        monday.setDate(simple.getDate() + (8 - dow));
-    }
-    // Domingo é o dia anterior à segunda-feira
-    let sunday = new Date(monday);
-    sunday.setDate(monday.getDate() - 1);
-    // Sábado é 6 dias após o domingo
+/**
+ * Dada uma data escolhida pelo usuário, calcula o intervalo (domingo a sábado)
+ */
+function getSundayAndSaturday(chosenDateStr) {
+    let d = new Date(chosenDateStr);
+    let day = d.getDay(); // 0 (Domingo) até 6 (Sábado)
+    d.setDate(d.getDate() - day); // Ajusta para o domingo
+    const sunday = new Date(d);
     let saturday = new Date(sunday);
-    saturday.setDate(sunday.getDate() + 6);
-    return { start: formatDate(sunday), end: formatDate(saturday) };
+    saturday.setDate(saturday.getDate() + 6);
+    return {
+        start: formatDate(sunday),
+        end: formatDate(saturday)
+    };
 }
+
+// --- Lógica para exibir o calendário customizado ---
+
+function showCustomCalendar() {
+    let input = document.getElementById("semana");
+    let container = document.getElementById("customCalendarContainer");
+    
+    // Define a data base: se o input já tiver valor, use-o; senão, use hoje.
+    let currentDate = input.value ? new Date(input.value) : new Date();
+    let year = currentDate.getFullYear();
+    let month = currentDate.getMonth();
+    
+    // Primeiro e último dia do mês
+    let firstDayOfMonth = new Date(year, month, 1);
+    let lastDayOfMonth = new Date(year, month + 1, 0);
+    
+    // Calcular o início (domingo antes ou igual) e o fim (sábado depois ou igual) para preencher semanas completas
+    let startDate = new Date(firstDayOfMonth);
+    startDate.setDate(firstDayOfMonth.getDate() - firstDayOfMonth.getDay());
+    let endDate = new Date(lastDayOfMonth);
+    endDate.setDate(lastDayOfMonth.getDate() + (6 - lastDayOfMonth.getDay()));
+    
+    let html = "<table class='custom-calendar-table'>";
+    // Cabeçalho dos dias da semana
+    let daysOfWeek = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+    html += "<thead><tr>";
+    daysOfWeek.forEach(day => {
+        html += `<th>${day}</th>`;
+    });
+    html += "</tr></thead>";
+    
+    html += "<tbody>";
+    let dateIterator = new Date(startDate);
+    while (dateIterator <= endDate) {
+        html += "<tr>";
+        for (let i = 0; i < 7; i++) {
+            let cellDate = new Date(dateIterator);
+            let cellDateStr = formatDate(cellDate);
+            html += `<td data-date="${cellDateStr}">${cellDate.getDate()}</td>`;
+            dateIterator.setDate(dateIterator.getDate() + 1);
+        }
+        html += "</tr>";
+    }
+    html += "</tbody></table>";
+    
+    container.innerHTML = html;
+    container.style.display = "block";
+    
+    // Adiciona eventos de mouseover/mouseout para iluminar toda a semana (linha)
+    let rows = container.querySelectorAll("tbody tr");
+    rows.forEach(row => {
+        row.addEventListener("mouseover", function() {
+            row.querySelectorAll("td").forEach(cell => cell.classList.add("highlight"));
+        });
+        row.addEventListener("mouseout", function() {
+            row.querySelectorAll("td").forEach(cell => cell.classList.remove("highlight"));
+        });
+    });
+    
+    // Ao clicar em um dia, define o valor no input e oculta o calendário
+    let cells = container.querySelectorAll("td");
+    cells.forEach(cell => {
+        cell.addEventListener("click", function() {
+            let selectedDate = cell.getAttribute("data-date");
+            input.value = selectedDate;
+            container.style.display = "none";
+        });
+    });
+}
+
+// Esconde o calendário customizado (opcional: pode ser usado ao clicar fora)
+function hideCustomCalendar() {
+    let container = document.getElementById("customCalendarContainer");
+    container.style.display = "none";
+}
+
+// Ao clicar no input "semana", exibe o calendário customizado
+document.getElementById("semana").addEventListener("click", function(e) {
+    showCustomCalendar();
+});
+
+// --- Fim da lógica do calendário customizado ---
 
 // Adicionar meta semanal
 document.getElementById("metaForm")?.addEventListener("submit", function(event) {
@@ -77,40 +176,42 @@ document.getElementById("metaForm")?.addEventListener("submit", function(event) 
     
     const metaNome = document.getElementById("metaNome").value;
     const quantidade = document.getElementById("quantidade").value;
-    const semana = document.getElementById("semana").value;
+    const chosenDate = document.getElementById("semana").value; // Valor definido pelo calendário customizado
     
-    const boundaries = computeWeekBoundaries(semana);
+    const boundaries = getSundayAndSaturday(chosenDate);
     
     const meta = { 
         metaNome, 
         quantidade, 
-        semana, 
-        start: boundaries.start, 
-        end: boundaries.end, 
+        semana: chosenDate,  
+        start: boundaries.start, // domingo
+        end: boundaries.end,     // sábado
         status: "Pendente",
         type: "semanal"
     };
+
+    let metas = getUserMetas();
     metas.push(meta);
-    localStorage.setItem("metas", JSON.stringify(metas));
+    setUserMetas(metas);
+
     renderCalendar();
     document.getElementById("metaForm").reset();
 });
 
-// Função para renderizar o calendário
+// Renderiza o calendário principal (do mês atual) com metas diárias e semanais
 function renderCalendar() {
     const calendario = document.getElementById("calendario");
     if (!calendario) return;
     
-    // Exibir o calendário do mês atual
+    let metas = getUserMetas();
+
     const today = new Date();
     const year = today.getFullYear();
     const month = today.getMonth();
     
-    // Primeiro e último dia do mês
     const firstDayOfMonth = new Date(year, month, 1);
     const lastDayOfMonth = new Date(year, month + 1, 0);
     
-    // Ajustar para mostrar semanas completas (domingo a sábado)
     const startDate = new Date(firstDayOfMonth);
     startDate.setDate(firstDayOfMonth.getDate() - firstDayOfMonth.getDay());
     const endDate = new Date(lastDayOfMonth);
@@ -121,7 +222,6 @@ function renderCalendar() {
     let table = document.createElement("table");
     table.classList.add("table", "table-bordered");
     
-    // Cabeçalho do calendário
     const thead = document.createElement("thead");
     const headerRow = document.createElement("tr");
     const daysOfWeek = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -130,7 +230,6 @@ function renderCalendar() {
         th.innerText = day;
         headerRow.appendChild(th);
     });
-    // Coluna extra para metas semanais
     const thExtra = document.createElement("th");
     thExtra.innerText = "Metas Semanais";
     headerRow.appendChild(thExtra);
@@ -139,39 +238,36 @@ function renderCalendar() {
     
     const tbody = document.createElement("tbody");
     
-    // Loop para cada semana
     while (currentDate <= endDate) {
         let row = document.createElement("tr");
         
-        // Data de domingo desta semana (início)
         const weekStartDate = new Date(currentDate);
         const weekStartStr = formatDate(weekStartDate);
         
-        // 7 dias da semana
         for (let i = 0; i < 7; i++) {
             let cell = document.createElement("td");
             cell.classList.add("day-cell");
             const cellDate = new Date(currentDate);
             const cellDateStr = formatDate(cellDate);
             
-            // Exibir número do dia
             let dayDiv = document.createElement("div");
             dayDiv.classList.add("day-number");
             dayDiv.innerText = cellDate.getDate();
             cell.appendChild(dayDiv);
             
-            // Listar metas diárias deste dia
+            // Exibe metas diárias deste dia
             metas.filter(m => m.type === "diaria" && m.dia === cellDateStr)
                  .forEach(meta => {
                      let metaDiv = document.createElement("div");
                      metaDiv.classList.add("daily-meta");
                      metaDiv.innerHTML = `<strong>${meta.metaNome}</strong> (${meta.quantidade}) 
-                        - <span class="text-${meta.status === 'Cumprida' ? 'success' : (meta.status === 'Não Cumprida' ? 'danger' : 'secondary')}">${meta.status}</span>
+                        - <span class="text-${
+                            meta.status === 'Cumprida' ? 'success' : (meta.status === 'Não Cumprida' ? 'danger' : 'secondary')
+                        }">${meta.status}</span>
                         <button class="btn btn-sm btn-warning" onclick="openFecharMetaModal(${metas.indexOf(meta)})">Fechar Meta</button>`;
                      cell.appendChild(metaDiv);
                  });
             
-            // Botão para adicionar meta diária
             let addBtn = document.createElement("button");
             addBtn.classList.add("btn", "btn-sm", "btn-primary", "mt-1");
             addBtn.innerText = "Adicionar Meta Diária";
@@ -185,14 +281,15 @@ function renderCalendar() {
             currentDate.setDate(currentDate.getDate() + 1);
         }
         
-        // Coluna para metas semanais da semana (filtrando as que têm start igual ao domingo desta semana)
         let weekMetaCell = document.createElement("td");
         metas.filter(m => m.type === "semanal" && m.start === weekStartStr)
              .forEach(meta => {
                  let metaDiv = document.createElement("div");
                  metaDiv.classList.add("week-meta");
                  metaDiv.innerHTML = `<strong>${meta.metaNome}</strong> (${meta.quantidade}) 
-                    - <span class="text-${meta.status === 'Cumprida' ? 'success' : (meta.status === 'Não Cumprida' ? 'danger' : 'secondary')}">${meta.status}</span>
+                    - <span class="text-${
+                        meta.status === 'Cumprida' ? 'success' : (meta.status === 'Não Cumprida' ? 'danger' : 'secondary')
+                    }">${meta.status}</span>
                     <button class="btn btn-sm btn-warning" onclick="openFecharMetaModal(${metas.indexOf(meta)})">Fechar Meta</button>`;
                  weekMetaCell.appendChild(metaDiv);
              });
@@ -206,18 +303,19 @@ function renderCalendar() {
     calendario.appendChild(table);
 }
 
-// Abre o modal para fechar meta e armazena o índice da meta selecionada
+// Abre o modal para fechar meta e define currentMetaIndex
 function openFecharMetaModal(index) {
     currentMetaIndex = index;
     var fecharModal = new bootstrap.Modal(document.getElementById('fecharMetaModal'));
     fecharModal.show();
 }
 
-// Configura as ações do modal de fechar meta
+// Configura ações dos botões do modal
 document.getElementById("btnCumprida").addEventListener("click", function() {
     if (currentMetaIndex !== null) {
+        let metas = getUserMetas();
         metas[currentMetaIndex].status = "Cumprida";
-        localStorage.setItem("metas", JSON.stringify(metas));
+        setUserMetas(metas);
         renderCalendar();
         bootstrap.Modal.getInstance(document.getElementById('fecharMetaModal')).hide();
         currentMetaIndex = null;
@@ -226,8 +324,9 @@ document.getElementById("btnCumprida").addEventListener("click", function() {
 
 document.getElementById("btnNaoCumprida").addEventListener("click", function() {
     if (currentMetaIndex !== null) {
+        let metas = getUserMetas();
         metas[currentMetaIndex].status = "Não Cumprida";
-        localStorage.setItem("metas", JSON.stringify(metas));
+        setUserMetas(metas);
         renderCalendar();
         bootstrap.Modal.getInstance(document.getElementById('fecharMetaModal')).hide();
         currentMetaIndex = null;
@@ -236,8 +335,9 @@ document.getElementById("btnNaoCumprida").addEventListener("click", function() {
 
 document.getElementById("btnExcluir").addEventListener("click", function() {
     if (currentMetaIndex !== null) {
+        let metas = getUserMetas();
         metas.splice(currentMetaIndex, 1);
-        localStorage.setItem("metas", JSON.stringify(metas));
+        setUserMetas(metas);
         renderCalendar();
         bootstrap.Modal.getInstance(document.getElementById('fecharMetaModal')).hide();
         currentMetaIndex = null;
@@ -257,7 +357,9 @@ document.getElementById("saveDailyMeta").addEventListener("click", function() {
     const metaNome = document.getElementById("dailyMetaNome").value;
     const quantidade = document.getElementById("dailyQuantidade").value;
     const dia = document.getElementById("dailyMetaDate").value;
-    if(metaNome && quantidade && dia) {
+    
+    if (metaNome && quantidade && dia) {
+        let metas = getUserMetas();
         const meta = {
             metaNome,
             quantidade,
@@ -266,11 +368,11 @@ document.getElementById("saveDailyMeta").addEventListener("click", function() {
             type: "diaria"
         };
         metas.push(meta);
-        localStorage.setItem("metas", JSON.stringify(metas));
+        setUserMetas(metas);
         renderCalendar();
         bootstrap.Modal.getInstance(document.getElementById('dailyMetaModal')).hide();
     }
 });
 
-// Renderiza o calendário ao carregar
+// Renderiza o calendário principal ao carregar
 renderCalendar();
