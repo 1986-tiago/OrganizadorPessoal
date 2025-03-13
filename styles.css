@@ -21,3 +21,49 @@ body {
     border-radius: 8px;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
+
+/* Estilos para o calendário */
+#calendario table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#calendario th, #calendario td {
+    border: 1px solid #dee2e6;
+    padding: 8px;
+    text-align: center;
+    vertical-align: top;
+}
+
+#calendario th {
+    background-color: #e9ecef;
+}
+
+.day-cell {
+    position: relative;
+    min-height: 80px;
+    cursor: pointer;
+}
+
+.day-number {
+    font-weight: bold;
+}
+
+.daily-meta {
+    font-size: 0.8rem;
+    margin-top: 4px;
+    padding: 2px 4px;
+    background-color: #f1f1f1;
+    border-radius: 4px;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.week-meta {
+    font-size: 0.9rem;
+    margin: 2px;
+    padding: 2px 4px;
+    background-color: #d1e7dd;
+    border-radius: 4px;
+    display: inline-block;
+}

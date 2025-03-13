@@ -15,8 +15,8 @@
     <div class="container mt-4">
         <h2>Organizador de Metas</h2>
         <div class="row">
-            <div class="col-md-6">
-                <h4>Adicionar Meta</h4>
+            <div class="col-md-4">
+                <h4>Adicionar Meta Semanal</h4>
                 <form id="metaForm">
                     <div class="mb-2">
                         <input type="text" id="metaNome" class="form-control" placeholder="Nome da Meta" required>
@@ -27,15 +27,66 @@
                     <div class="mb-2">
                         <input type="week" id="semana" class="form-control" required>
                     </div>
-                    <button type="submit" class="btn btn-success">Salvar Meta</button>
+                    <button type="submit" class="btn btn-success">Salvar Meta Semanal</button>
                 </form>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-8">
                 <h4>Calendário</h4>
                 <div id="calendario" class="mt-3"></div>
             </div>
         </div>
     </div>
+
+    <!-- Modal para fechar meta -->
+    <div class="modal fade" id="fecharMetaModal" tabindex="-1" aria-labelledby="fecharMetaModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="fecharMetaModalLabel">Fechar Meta</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          </div>
+          <div class="modal-body">
+            <p>Selecione uma opção:</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-success" id="btnCumprida">Cumprida</button>
+            <button type="button" class="btn btn-danger" id="btnNaoCumprida">Não Cumprida</button>
+            <button type="button" class="btn btn-secondary" id="btnExcluir">Excluir</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal para adicionar meta diária -->
+    <div class="modal fade" id="dailyMetaModal" tabindex="-1" aria-labelledby="dailyMetaModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="dailyMetaModalLabel">Adicionar Meta Diária</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          </div>
+          <div class="modal-body">
+            <form id="dailyMetaForm">
+                <div class="mb-3">
+                    <label for="dailyMetaNome" class="form-label">Nome da Meta</label>
+                    <input type="text" class="form-control" id="dailyMetaNome" required>
+                </div>
+                <div class="mb-3">
+                    <label for="dailyQuantidade" class="form-label">Quantidade</label>
+                    <input type="number" class="form-control" id="dailyQuantidade" required>
+                </div>
+                <input type="hidden" id="dailyMetaDate">
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="saveDailyMeta">Salvar Meta Diária</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle (necessário para os modais) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
