@@ -198,6 +198,9 @@ document.getElementById("metaForm")?.addEventListener("submit", function(event) 
     document.getElementById("metaForm").reset();
 });
 
+// Variável global para armazenar o mês/ano atualmente exibido no calendário principal
+let currentCalendarDate = new Date();
+
 // Renderiza o calendário principal (do mês atual) com metas diárias e semanais
 function renderCalendar() {
     const calendario = document.getElementById("calendario");
@@ -205,9 +208,9 @@ function renderCalendar() {
     
     let metas = getUserMetas();
 
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth();
+    // Usa currentCalendarDate para definir o mês e ano exibidos
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth();
     
     const firstDayOfMonth = new Date(year, month, 1);
     const lastDayOfMonth = new Date(year, month + 1, 0);
@@ -218,6 +221,34 @@ function renderCalendar() {
     endDate.setDate(lastDayOfMonth.getDate() + (6 - lastDayOfMonth.getDay()));
     
     let currentDate = new Date(startDate);
+    
+    // Cria cabeçalho com navegação e exibição do mês e ano
+    const calendarHeader = document.createElement("div");
+    calendarHeader.classList.add("d-flex", "justify-content-between", "align-items-center", "mb-3");
+    
+    const prevButton = document.createElement("button");
+    prevButton.classList.add("btn", "btn-secondary", "btn-sm");
+    prevButton.innerText = "Anterior";
+    prevButton.addEventListener("click", function() {
+         currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+         renderCalendar();
+    });
+    
+    const nextButton = document.createElement("button");
+    nextButton.classList.add("btn", "btn-secondary", "btn-sm");
+    nextButton.innerText = "Próximo";
+    nextButton.addEventListener("click", function() {
+         currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+         renderCalendar();
+    });
+    
+    const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    const monthYearText = document.createElement("span");
+    monthYearText.innerText = monthNames[month] + " " + year;
+    
+    calendarHeader.appendChild(prevButton);
+    calendarHeader.appendChild(monthYearText);
+    calendarHeader.appendChild(nextButton);
     
     let table = document.createElement("table");
     table.classList.add("table", "table-bordered");
@@ -300,6 +331,7 @@ function renderCalendar() {
     table.appendChild(tbody);
     
     calendario.innerHTML = "";
+    calendario.appendChild(calendarHeader);
     calendario.appendChild(table);
 }
 
